@@ -1,0 +1,18 @@
+FROM golang:1.20-alpine
+
+ENV GO111MODULE on
+ENV APP_ENV development
+ENV HOME_DIR "/go/src/github.com/backend-test-cubi-casa"
+
+RUN apk add bash curl g++ libc-dev autoconf automake libtool make
+RUN mkdir -p $HOME_DIR
+
+WORKDIR $HOME_DIR
+
+ADD . .
+RUN go mod vendor
+
+RUN go install github.com/githubnemo/CompileDaemon@latest
+
+
+ENTRYPOINT CompileDaemon -build="go build -o build/api ./main.go" -command="./build/api"

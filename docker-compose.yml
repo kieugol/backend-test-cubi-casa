@@ -1,0 +1,27 @@
+version: "2"
+services:
+  app:
+    container_name: rest-api
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile-dev
+    volumes:
+      - ./:/go/src/github.com/backend-test-cubi-casa
+    ports:
+      - 9090:9011
+    links:
+      - db
+    working_dir: /go/src/github.com/backend-test-cubi-casa
+  db:
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - ./db/migrations/init.sqlc:/docker-entrypoint-initdb.d/create_tables.sqlc
+volumes:
+  db:
+    driver: local

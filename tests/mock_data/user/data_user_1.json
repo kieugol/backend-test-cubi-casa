@@ -1,0 +1,20 @@
+{
+  "id": 6,
+  "name": "kieu2",
+  "email": "nhu2@gmail.com",
+  "phone": "+84917474774",
+  "address": "HCM, City, p13, qTB",
+  "team_id": 2,
+  "team": {
+    "id": 2,
+    "name": "team-php",
+    "description": "",
+    "hub_id": 1,
+    "hub": {
+      "id": 1,
+      "name": "hub8",
+      "location": "ca mau",
+      "description": ""
+    }
+  }
+}

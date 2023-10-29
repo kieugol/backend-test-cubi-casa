@@ -1,0 +1,14 @@
+env:
+  mode: debug
+server:
+  port: 9011
+  timezone: UTC
+
+database:
+  host: 192.168.1.11 # change to your ip local
+  port: 5432
+  username: postgres
+  password: postgres
+  db_name: postgres
+
+
