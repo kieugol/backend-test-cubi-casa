@@ -28,8 +28,8 @@
 
 3. **Migrate DB** (Make sure step.2 have been completed)
    1. CD to root folder `backend-test-cubi-casa`
-   2. type `make ssh-app` (go in to container)
-   3. type `go run migrate/migrate.go`  
+   2. Type `make ssh-app` (go in to container)
+   3. Type `go run migrate/migrate.go`  
       see output complete ` 👍 Migration complete `
 
 
@@ -80,18 +80,25 @@
             - **params**:  ```{
               "name": "krol",
               "email": "kieu@"
-              } ```
+              } ```    
 
-5. **Execute Unit test**  
-   (**Note:** Using `make` command)
-    1. CD to root folder `backend-test-cubi-casa`.  
-    2. type `make ssh-app` 
-       1. Unit Test `hub.service.go` and `hub.repository.go`
-           - Type `make test-hub-service` 
-           - see report html at folder  `tests/report/hub/hub.service.coverage.html`
-       2. Unit Test`team.service.go` and `team.repository.go`
-          - Type `make test-team-service`
-          - see report html at folder  `tests/report/team/team.service.coverage.html`
-       3. Unit Test`user.service.go` and `user.repository.go`
-          - Type `make test-user-service`
-          - see report html at folder  `tests/report/user/user.service.coverage.html`
+
+5. **Execute Unit test**  (Using `make` command )
+     1. CD to root folder `backend-test-cubi-casa`.  
+     2. Type `make ssh-app` 
+        - **Test Services** 
+           1. Unit Test `hub.service.go` and `hub.repository.go`
+               - Type `make test-hub-service` 
+               - See report html at folder  `tests/report/hub/hub.service.coverage.html`
+           2. Unit Test`team.service.go` and `team.repository.go`
+              - Type `make test-team-service`
+              - See report html at folder  `tests/report/team/team.service.coverage.html`
+           3. Unit Test`user.service.go` and `user.repository.go`
+              - Type `make test-user-service`
+              - See report html at folder  `tests/report/user/user.service.coverage.html`
+        - **Test Controller**
+            1. Unit Test`user.controller.go`
+               - Type `make test-user-controller`
+               - See report html at folder  `tests/report/user/user.controller.coverage.html`
+            2. Unit Test`team.controller.go` // TODO  
+            3. Unit Test`hub.controller.go`  // TODO
