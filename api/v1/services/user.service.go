@@ -9,8 +9,8 @@ import (
 )
 
 type IUserService interface {
-	HandleCreate(ctx context.Context, req models.UserCreateReq) (*models.User, error)
-	HandleSearch(ctx context.Context, req models.UserSearchReq) ([]*models.UserResp, error)
+	HandleCreate(req models.UserCreateReq) (*models.User, error)
+	HandleSearch(req models.UserSearchReq) ([]*models.UserResp, error)
 }
 
 type UserService struct {
@@ -23,7 +23,7 @@ func NewUserService(repo repository.IUserRepository) *UserService {
 	}
 }
 
-func (srv *UserService) HandleCreate(ctx context.Context, req models.UserCreateReq) (*models.User, error) {
+func (srv *UserService) HandleCreate(req models.UserCreateReq) (*models.User, error) {
 	now := time.Now()
 	user := &models.User{
 		Name:      req.Name,
@@ -35,15 +35,15 @@ func (srv *UserService) HandleCreate(ctx context.Context, req models.UserCreateR
 		UpdatedAt: now,
 	}
 
-	if err := srv.repo.Create(ctx, user); err != nil {
+	if err := srv.repo.Create(context.TODO(), user); err != nil {
 		return nil, err
 	}
 
 	return user, nil
 }
 
-func (srv *UserService) HandleSearch(ctx context.Context, req models.UserSearchReq) ([]*models.UserResp, error) {
-	users, err := srv.repo.Find(ctx, req)
+func (srv *UserService) HandleSearch(req models.UserSearchReq) ([]*models.UserResp, error) {
+	users, err := srv.repo.Find(context.TODO(), req)
 	if err != nil {
 		return nil, err
 	}

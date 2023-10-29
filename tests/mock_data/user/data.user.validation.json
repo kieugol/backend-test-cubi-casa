@@ -1,0 +1,8 @@
+{
+  "code": 400,
+  "message": {
+    "field": "phone",
+    "reason": "duplicate key value violates unique constraint"
+  },
+  "data": null
+}

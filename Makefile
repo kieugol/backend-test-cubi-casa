@@ -14,7 +14,7 @@ test-hub-service:
 	go test -v ./tests/unit/hub.service_test.go \
   		-coverpkg=./api/v1/services,./api/v1/repository \
   		-coverprofile=./tests/report/hub/hub.service.coverage.out
-	go tool cover -html ./tests/report/hub/hub.coverage.out \
+	go tool cover -html ./tests/report/hub/hub.service.coverage.out \
 		-o ./tests/report/hub/hub.service.coverage.html
 test-team-service:
 	go test -v ./tests/unit/team.service_test.go \
@@ -28,4 +28,10 @@ test-user-service:
   		-coverprofile=./tests/report/user/user.service.coverage.out
 	go tool cover -html ./tests/report/user/user.service.coverage.out \
 		-o ./tests/report/user/user.service.coverage.html
+test-user-controller:
+	go test -v ./tests/unit/user.controller_test.go \
+  		-coverpkg=./api/v1/controllers \
+  		-coverprofile=./tests/report/user/user.controller.coverage.out
+	go tool cover -html ./tests/report/user/user.controller.coverage.out \
+		-o ./tests/report/user/user.controller.coverage.html
 

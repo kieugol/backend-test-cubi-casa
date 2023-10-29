@@ -3,12 +3,14 @@ package controllers
 import (
 	"net/http"
 
+	"errors"
+
 	"github.com/backend-test-cubi-casa/api/v1/models"
 	"github.com/backend-test-cubi-casa/api/v1/services"
-	"github.com/backend-test-cubi-casa/helpers/error"
-	errC "github.com/backend-test-cubi-casa/helpers/error"
+	"github.com/backend-test-cubi-casa/helpers/errc"
 	"github.com/backend-test-cubi-casa/helpers/resp"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type HubController struct {
@@ -24,14 +26,14 @@ func NewHubController(srv services.IHubService) *HubController {
 func (ctrl HubController) Create(c *gin.Context) {
 	var req models.HubCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, resp.BadRequest(error.GetValidationErrMgs(err)))
+		c.JSON(http.StatusBadRequest, resp.BadRequest(errc.GetValidationErrMgs(err)))
 		return
 	}
 
-	data, err := ctrl.srv.HandleCreate(c, req)
+	data, err := ctrl.srv.HandleCreate(req)
 	if err != nil {
-		if errPg := errC.GetGORMErrMgs(err); errPg != nil {
-			c.JSON(http.StatusBadRequest, resp.BadRequest(errPg))
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			c.JSON(http.StatusBadRequest, resp.BadRequest(err.Error()))
 			return
 		}
 		c.JSON(http.StatusInternalServerError, resp.InternalServerError())

@@ -26,8 +26,8 @@ func Init() (*gorm.DB, error) {
 			host, port, user, password, database,
 		)
 		db, err = gorm.Open(postgres.Open(psqlInfo), &gorm.Config{
-			//TranslateError: true,
-			Logger: logger.Default.LogMode(logger.Info),
+			TranslateError: true,
+			Logger:         logger.Default.LogMode(logger.Info),
 		})
 	}
 

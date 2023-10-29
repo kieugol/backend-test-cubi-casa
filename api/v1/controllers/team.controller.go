@@ -3,12 +3,15 @@ package controllers
 import (
 	"net/http"
 
+	"errors"
+
 	"github.com/backend-test-cubi-casa/api/v1/models"
 	"github.com/backend-test-cubi-casa/api/v1/services"
-	errC "github.com/backend-test-cubi-casa/helpers/error"
+	"github.com/backend-test-cubi-casa/helpers/errc"
 	"github.com/backend-test-cubi-casa/helpers/resp"
 	"github.com/backend-test-cubi-casa/helpers/util"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type TeamController struct {
@@ -24,17 +27,18 @@ func NewTeamController(srv services.ITeamService) *TeamController {
 func (ctrl TeamController) Create(c *gin.Context) {
 	var req models.TeamCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, resp.BadRequest(errC.GetValidationErrMgs(err)))
+		c.JSON(http.StatusBadRequest, resp.BadRequest(errc.GetValidationErrMgs(err)))
 		return
 	}
 
-	data, err := ctrl.srv.HandleCreate(c, req)
+	data, err := ctrl.srv.HandleCreate(req)
 	if err != nil {
-		if errPg := errC.GetGORMErrMgs(err); errPg != nil {
-			c.JSON(http.StatusBadRequest, resp.BadRequest(errPg))
+		if errors.Is(err, gorm.ErrDuplicatedKey) ||
+			errors.Is(err, gorm.ErrForeignKeyViolated) {
+			c.JSON(http.StatusBadRequest, resp.BadRequest(err.Error()))
 			return
 		}
-		c.JSON(http.StatusOK, resp.Success(data, http.StatusOK))
+		c.JSON(http.StatusInternalServerError, resp.InternalServerError())
 		return
 	}
 
@@ -50,7 +54,7 @@ func (ctrl TeamController) Search(c *gin.Context) {
 		return
 	}
 
-	data, err := ctrl.srv.HandleSearch(c, req)
+	data, err := ctrl.srv.HandleSearch(req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, resp.InternalServerError())
 		return

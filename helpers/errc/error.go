@@ -1,7 +1,8 @@
-package error
+package errc
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -19,11 +20,12 @@ type ValidationError struct {
 
 func GetValidationErrMgs(err error) interface{} {
 	var errV validator.ValidationErrors
-
+	
 	if errors.As(err, &errV) {
 		return ParseErrMgs(errV)
 	}
 
+	log.Println(err.Error())
 	return http.StatusText(http.StatusBadRequest)
 }
 

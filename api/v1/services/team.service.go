@@ -9,8 +9,8 @@ import (
 )
 
 type ITeamService interface {
-	HandleCreate(ctx context.Context, req models.TeamCreateReq) (*models.Team, error)
-	HandleSearch(ctx context.Context, req models.TeamSearchReq) ([]*models.TeamResp, error)
+	HandleCreate(req models.TeamCreateReq) (*models.Team, error)
+	HandleSearch(req models.TeamSearchReq) ([]*models.TeamResp, error)
 }
 
 type TeamService struct {
@@ -23,7 +23,7 @@ func NewTeamService(repo repository.ITeamRepository) *TeamService {
 	}
 }
 
-func (srv *TeamService) HandleCreate(ctx context.Context, req models.TeamCreateReq) (*models.Team, error) {
+func (srv *TeamService) HandleCreate(req models.TeamCreateReq) (*models.Team, error) {
 	now := time.Now()
 	user := &models.Team{
 		Name:        req.Name,
@@ -33,15 +33,15 @@ func (srv *TeamService) HandleCreate(ctx context.Context, req models.TeamCreateR
 		UpdatedAt:   now,
 	}
 
-	if err := srv.repo.Create(ctx, user); err != nil {
+	if err := srv.repo.Create(context.TODO(), user); err != nil {
 		return nil, err
 	}
 
 	return user, nil
 }
 
-func (srv *TeamService) HandleSearch(ctx context.Context, req models.TeamSearchReq) ([]*models.TeamResp, error) {
-	teams, err := srv.repo.Find(ctx, req)
+func (srv *TeamService) HandleSearch(req models.TeamSearchReq) ([]*models.TeamResp, error) {
+	teams, err := srv.repo.Find(context.TODO(), req)
 	if err != nil {
 		return nil, err
 	}
