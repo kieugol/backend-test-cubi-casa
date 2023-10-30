@@ -50,6 +50,7 @@ func (m *UserServiceMock) HandleSearch(req models.UserSearchReq) ([]*models.User
 	return data, agrs.Error(1)
 }
 
+// Mock function
 func (m *UserServiceMock) HandleCreate(req models.UserCreateReq) (*models.User, error) {
 	agrs := m.Called(req)
 	var data *models.User
@@ -78,9 +79,7 @@ func TestSearchUser_Found_WithNameAndEmail(t *testing.T) {
 	var users []*models.UserResp
 	var user *models.UserResp
 	util.ParseJSON(userDataMock, &user)
-	if user != nil {
-		users = append(users, user)
-	}
+	users = append(users, user)
 
 	userSrvMock.On("HandleSearch", req).Return(users, nil)
 	respExpected, _ := json.Marshal(resp.Success(users, http.StatusOK))
@@ -145,6 +144,7 @@ func TestCreateUser_Success(t *testing.T) {
 	userSrvMock := new(UserServiceMock)
 	pathF1, _ := filepath.Abs("../mock_data/user/data.user.req.json")
 	userDataMock := util.ReadFile(pathF1)
+
 	var userCreateReq *models.UserCreateReq
 	var user *models.User
 	util.ParseJSON(userDataMock, &user)
@@ -178,10 +178,10 @@ func TestCreateUser_Failed_Validation_Params(t *testing.T) {
 	}
 
 	userSrvMock.On("HandleCreate", userCreateReq).Return(nil, nil)
+
 	var errV []*errc.ValidationError
 	strErr := `[{"field":"name","reason":"required"},{"field":"email","reason":"email"},{"field":"phone","reason":"e164"}]`
 	util.ParseJSON([]byte(strErr), &errV)
-
 	respExpected, _ := json.Marshal(resp.BadRequest(errV))
 
 	// Execute test Controller
@@ -231,6 +231,7 @@ func TestCreateUser_Failed_InternalServerError(t *testing.T) {
 	userSrvMock := new(UserServiceMock)
 	pathF1, _ := filepath.Abs("../mock_data/user/data.user.req.json")
 	userReqMock := util.ReadFile(pathF1)
+
 	var userCreateReq *models.UserCreateReq
 	util.ParseJSON(userReqMock, &userCreateReq)
 

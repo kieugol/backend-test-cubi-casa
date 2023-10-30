@@ -33,7 +33,7 @@ func DbMock(t *testing.T) (*sql.DB, *gorm.DB, sqlmock.Sqlmock) {
 	return sqldb, gormdb, mock
 }
 
-func TestCreateTeam_Success(t *testing.T) {
+func TestSaveTeam_Success(t *testing.T) {
 	// Mock data
 	sqlDB, db, mock := DbMock(t)
 	defer sqlDB.Close()
@@ -43,7 +43,7 @@ func TestCreateTeam_Success(t *testing.T) {
 		Name:  "Hub1",
 		HubID: 2,
 	}
-	teamResp := models.Team{
+	dataExpected := models.Team{
 		ID:        1,
 		Name:      teamReq.Name,
 		HubID:     teamReq.HubID,
@@ -53,7 +53,7 @@ func TestCreateTeam_Success(t *testing.T) {
 
 	team := sqlmock.
 		NewRows([]string{"id", "name", "hub_id", "created_at", "updated_at"}).
-		AddRow(teamResp.ID, teamReq.Name, teamReq.HubID, timeNow, timeNow)
+		AddRow(dataExpected.ID, teamReq.Name, teamReq.HubID, timeNow, timeNow)
 	expectedSQLUser := "INSERT INTO \"teams\" (.+) VALUES (.+)"
 	mock.ExpectBegin()
 	mock.ExpectQuery(expectedSQLUser).WillReturnRows(team)
@@ -65,10 +65,10 @@ func TestCreateTeam_Success(t *testing.T) {
 	result, err := srv.HandleCreate(teamReq)
 	// Assert test result
 	assert.Equal(t, nil, err)
-	assert.Equal(t, teamResp, *result)
+	assert.Equal(t, dataExpected, *result)
 }
 
-func TestCreateTeam_Failed_ForeignKey_NotFound(t *testing.T) {
+func TestSaveTeam_Failed_ForeignKey_NotFound(t *testing.T) {
 	// Mock data
 	sqlDB, db, mock := DbMock(t)
 	defer sqlDB.Close()
@@ -77,7 +77,7 @@ func TestCreateTeam_Failed_ForeignKey_NotFound(t *testing.T) {
 		Name:  "hub-duplicate",
 		HubID: 10,
 	}
-	var teamResp *models.Team
+	var dataExpected *models.Team
 
 	expectedSQLUser := "INSERT INTO \"teams\" (.+) VALUES (.+)"
 	mock.ExpectBegin()
@@ -91,7 +91,7 @@ func TestCreateTeam_Failed_ForeignKey_NotFound(t *testing.T) {
 
 	// Assert test result
 	assert.Equal(t, gorm.ErrForeignKeyViolated, err)
-	assert.Equal(t, teamResp, result)
+	assert.Equal(t, dataExpected, result)
 }
 
 func TestSearchTeam_Found_WithNameAndID(t *testing.T) {
@@ -108,7 +108,7 @@ func TestSearchTeam_Found_WithNameAndID(t *testing.T) {
 		Name:     "hub-1",
 		Location: "hub-hcm",
 	}
-	teamResp := models.TeamResp{
+	dataExpected := models.TeamResp{
 		ID:    1,
 		Name:  "team-php",
 		HubID: 1,
@@ -117,7 +117,7 @@ func TestSearchTeam_Found_WithNameAndID(t *testing.T) {
 
 	team := sqlmock.
 		NewRows([]string{"id", "name", "hub_id"}).
-		AddRow(teamResp.ID, teamResp.Name, teamResp.HubID)
+		AddRow(dataExpected.ID, dataExpected.Name, dataExpected.HubID)
 	hub := sqlmock.
 		NewRows([]string{"id", "name", "location"}).
 		AddRow(hubResp.ID, hubResp.Name, hubResp.Location)
@@ -133,7 +133,7 @@ func TestSearchTeam_Found_WithNameAndID(t *testing.T) {
 
 	// Assert test result
 	assert.Equal(t, nil, err)
-	assert.Equal(t, teamResp, *result[0])
+	assert.Equal(t, dataExpected, *result[0])
 }
 
 func TestSearchUser_InternalServerError(t *testing.T) {
@@ -143,7 +143,7 @@ func TestSearchUser_InternalServerError(t *testing.T) {
 	teamReq := models.TeamSearchReq{
 		Name: "team-not-found",
 	}
-	var teamResp []*models.TeamResp
+	var dataExpected []*models.TeamResp
 
 	expectedSQLUser := "SELECT (.+) FROM \"teams\" WHERE name LIKE (.+)"
 	mock.ExpectQuery(expectedSQLUser).WillReturnError(gorm.ErrUnsupportedRelation)
@@ -155,5 +155,5 @@ func TestSearchUser_InternalServerError(t *testing.T) {
 
 	// Assert test result
 	assert.Equal(t, gorm.ErrUnsupportedRelation, err)
-	assert.Equal(t, teamResp, result)
+	assert.Equal(t, dataExpected, result)
 }

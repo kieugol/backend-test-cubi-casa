@@ -33,7 +33,7 @@ func DbMock(t *testing.T) (*sql.DB, *gorm.DB, sqlmock.Sqlmock) {
 	return sqldb, gormdb, mock
 }
 
-func TestCreateHub_Success(t *testing.T) {
+func TestSaveHub_Success(t *testing.T) {
 	// Mock data
 	sqlDB, db, mock := DbMock(t)
 	defer sqlDB.Close()
@@ -43,7 +43,7 @@ func TestCreateHub_Success(t *testing.T) {
 		Location: "HCM city",
 	}
 
-	hubResp := models.Hub{
+	dataExpected := models.Hub{
 		ID:        1,
 		Name:      hubReq.Name,
 		Location:  hubReq.Location,
@@ -53,7 +53,7 @@ func TestCreateHub_Success(t *testing.T) {
 
 	user := sqlmock.
 		NewRows([]string{"id", "name", "location", "created_at", "updated_at"}).
-		AddRow(hubResp.ID, hubReq.Name, hubReq.Location, timeNow, timeNow)
+		AddRow(dataExpected.ID, hubReq.Name, hubReq.Location, timeNow, timeNow)
 	expectedSQLUser := "INSERT INTO \"hubs\" (.+) VALUES (.+)"
 
 	mock.ExpectBegin()
@@ -67,10 +67,10 @@ func TestCreateHub_Success(t *testing.T) {
 
 	// Assert test result
 	assert.Equal(t, nil, err)
-	assert.Equal(t, hubResp, *result)
+	assert.Equal(t, dataExpected, *result)
 }
 
-func TestCreateHub_Failed_Duplicate(t *testing.T) {
+func TestSaveHub_Failed_Duplicate(t *testing.T) {
 	// Mock data
 	sqlDB, db, mock := DbMock(t)
 	defer sqlDB.Close()
@@ -78,7 +78,7 @@ func TestCreateHub_Failed_Duplicate(t *testing.T) {
 		Name:     "hub-duplicate",
 		Location: "HCM city",
 	}
-	var hubResp *models.Hub
+	var dataExpected *models.Hub
 
 	expectedSQLUser := "INSERT INTO \"hubs\" (.+) VALUES (.+)"
 
@@ -93,5 +93,5 @@ func TestCreateHub_Failed_Duplicate(t *testing.T) {
 
 	// Assert test result
 	assert.Equal(t, gorm.ErrDuplicatedKey, err)
-	assert.Equal(t, hubResp, result)
+	assert.Equal(t, dataExpected, result)
 }

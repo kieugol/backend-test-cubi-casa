@@ -33,7 +33,7 @@ func DbMock(t *testing.T) (*sql.DB, *gorm.DB, sqlmock.Sqlmock) {
 	return sqldb, gormdb, mock
 }
 
-func TestCreateUser_Success(t *testing.T) {
+func TestSaveUser_Success(t *testing.T) {
 	// Mock data
 	sqlDB, db, mock := DbMock(t)
 	defer sqlDB.Close()
@@ -46,7 +46,7 @@ func TestCreateUser_Success(t *testing.T) {
 		TeamID:  1,
 	}
 
-	userResp := models.User{
+	dataExpected := models.User{
 		ID:        1,
 		Name:      userReq.Name,
 		Email:     userReq.Email,
@@ -59,7 +59,7 @@ func TestCreateUser_Success(t *testing.T) {
 
 	user := sqlmock.
 		NewRows([]string{"id", "name", "email", "phone", "address", "team_id", "created_at", "updated_at"}).
-		AddRow(userResp.ID, userReq.Name, userReq.Email, userReq.Phone, userReq.Address, userReq.TeamID, timeNow, timeNow)
+		AddRow(dataExpected.ID, userReq.Name, userReq.Email, userReq.Phone, userReq.Address, userReq.TeamID, timeNow, timeNow)
 	expectedSQLUser := "INSERT INTO \"users\" (.+) VALUES (.+)"
 
 	mock.ExpectBegin()
@@ -73,10 +73,10 @@ func TestCreateUser_Success(t *testing.T) {
 
 	// Assert test result
 	assert.Equal(t, nil, err)
-	assert.Equal(t, userResp, *result)
+	assert.Equal(t, dataExpected, *result)
 }
 
-func TestCreateUser_Failed_Duplicate(t *testing.T) {
+func TestSaveUser_Failed_Duplicate(t *testing.T) {
 	// Mock data
 	sqlDB, db, mock := DbMock(t)
 	defer sqlDB.Close()
@@ -87,7 +87,7 @@ func TestCreateUser_Failed_Duplicate(t *testing.T) {
 		Address: "HCM city",
 		TeamID:  1,
 	}
-	var userResp *models.User
+	var dataExpected *models.User
 
 	expectedSQLUser := "INSERT INTO \"users\" (.+) VALUES (.+)"
 
@@ -102,10 +102,10 @@ func TestCreateUser_Failed_Duplicate(t *testing.T) {
 
 	// Assert test result
 	assert.Equal(t, gorm.ErrDuplicatedKey, err)
-	assert.Equal(t, userResp, result)
+	assert.Equal(t, dataExpected, result)
 }
 
-func TestSearchUser_Found_WithNameAndEmail(t *testing.T) {
+func TestFindUser_Found_WithNameAndEmail(t *testing.T) {
 	// Mock data
 	sqlDB, db, mock := DbMock(t)
 	defer sqlDB.Close()
@@ -124,7 +124,7 @@ func TestSearchUser_Found_WithNameAndEmail(t *testing.T) {
 		HubID: 1,
 		Hub:   hubResp,
 	}
-	userResp := models.UserResp{
+	dataExpected := models.UserResp{
 		ID:      1,
 		Name:    "user",
 		Email:   "user.acc@gmail.com",
@@ -136,7 +136,7 @@ func TestSearchUser_Found_WithNameAndEmail(t *testing.T) {
 
 	user := sqlmock.
 		NewRows([]string{"id", "name", "email", "phone", "address", "team_id"}).
-		AddRow(userResp.ID, userResp.Name, userResp.Email, userResp.Phone, userResp.Address, userResp.TeamID)
+		AddRow(dataExpected.ID, dataExpected.Name, dataExpected.Email, dataExpected.Phone, dataExpected.Address, dataExpected.TeamID)
 	team := sqlmock.
 		NewRows([]string{"id", "name", "hub_id"}).
 		AddRow(teamResp.ID, teamResp.Name, teamResp.HubID)
@@ -157,17 +157,17 @@ func TestSearchUser_Found_WithNameAndEmail(t *testing.T) {
 
 	// Assert test result
 	assert.Equal(t, nil, err)
-	assert.Equal(t, userResp, *result[0])
+	assert.Equal(t, dataExpected, *result[0])
 }
 
-func TestSearchUser_InternalServerError_(t *testing.T) {
+func TestFindUser_InternalServerError_(t *testing.T) {
 	// Mock data
 	sqlDB, db, mock := DbMock(t)
 	defer sqlDB.Close()
 	userReq := models.UserSearchReq{
 		Name: "user-not-found",
 	}
-	var userResp []*models.UserResp
+	var dataExpected []*models.UserResp
 
 	expectedSQLUser := "SELECT (.+) FROM \"users\" WHERE name LIKE (.+)"
 	mock.ExpectQuery(expectedSQLUser).WillReturnError(gorm.ErrUnsupportedRelation)
@@ -179,5 +179,5 @@ func TestSearchUser_InternalServerError_(t *testing.T) {
 
 	// Assert test result
 	assert.Equal(t, gorm.ErrUnsupportedRelation, err)
-	assert.Equal(t, userResp, result)
+	assert.Equal(t, dataExpected, result)
 }
