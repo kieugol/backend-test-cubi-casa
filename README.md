@@ -13,7 +13,7 @@
     * Install `Make` package latest or stable version
     * Install `Postman`
 
-2. **Install api on docker and setup ENV**
+2. **Install API and PostgreSQL DB on docker and setup ENV**
     1. CD to root folder `backend-test-cubi-casa`
     2. Open file `config/development.yaml` find config `database.host`
        change to your ip local
