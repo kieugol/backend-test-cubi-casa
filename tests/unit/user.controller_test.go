@@ -162,8 +162,8 @@ func TestCreateUser_Success(t *testing.T) {
 	r.ServeHTTP(w, reqTest)
 
 	// Assert test result
-	responseData, _ := ioutil.ReadAll(w.Body)
-	assert.Equal(t, string(respExpected), string(responseData))
+	respActual, _ := ioutil.ReadAll(w.Body)
+	assert.Equal(t, string(respExpected), string(respActual))
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
@@ -193,8 +193,8 @@ func TestCreateUser_Failed_Validation_Params(t *testing.T) {
 	r.ServeHTTP(w, reqTest)
 
 	// Assert test result
-	responseData, _ := ioutil.ReadAll(w.Body)
-	assert.Equal(t, string(respExpected), string(responseData))
+	respActual, _ := ioutil.ReadAll(w.Body)
+	assert.Equal(t, string(respExpected), string(respActual))
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
@@ -221,8 +221,8 @@ func TestCreateUser_Failed_Validation_Duplicate(t *testing.T) {
 	r.ServeHTTP(w, reqTest)
 
 	// Assert test result
-	responseData, _ := ioutil.ReadAll(w.Body)
-	assert.Equal(t, string(respExpected), string(responseData))
+	respActual, _ := ioutil.ReadAll(w.Body)
+	assert.Equal(t, string(respExpected), string(respActual))
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
@@ -246,7 +246,7 @@ func TestCreateUser_Failed_InternalServerError(t *testing.T) {
 	r.ServeHTTP(w, reqTest)
 
 	// Assert test result
-	responseData, _ := ioutil.ReadAll(w.Body)
-	assert.Equal(t, string(respExpected), string(responseData))
+	respActual, _ := ioutil.ReadAll(w.Body)
+	assert.Equal(t, string(respExpected), string(respActual))
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }
