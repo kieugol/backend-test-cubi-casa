@@ -2,10 +2,10 @@ package unit
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -34,25 +34,19 @@ func init() {
 	config.Init(os.Getenv("APP_ENV"), os.Getenv("HOME_DIR")+"/config")
 }
 
-func SetUpRouter() *gin.Engine {
-	router := gin.Default()
-	return router
-}
-
 // Mock function
-func (m *UserServiceMock) HandleSearch(req models.UserSearchReq) ([]*models.UserResp, error) {
-	agrs := m.Called(req)
+func (m *UserServiceMock) HandleSearch(ctx context.Context, req models.UserSearchReq) ([]*models.UserResp, error) {
+	agrs := m.Called(ctx, req)
 	var data []*models.UserResp
 	byteD, _ := json.Marshal(agrs.Get(0))
-	log.Println("byteD:", string(byteD))
 	util.ParseJSON(byteD, &data)
 
 	return data, agrs.Error(1)
 }
 
 // Mock function
-func (m *UserServiceMock) HandleCreate(req models.UserCreateReq) (*models.User, error) {
-	agrs := m.Called(req)
+func (m *UserServiceMock) HandleCreate(ctx context.Context, req models.UserCreateReq) (*models.User, error) {
+	agrs := m.Called(ctx, req)
 	var data *models.User
 	byteD, _ := json.Marshal(agrs.Get(0))
 	util.ParseJSON(byteD, &data)
@@ -72,8 +66,8 @@ func (m *UserServiceMock) initParams(name string, email string) models.UserSearc
 func TestSearchUser_Found_WithNameAndEmail(t *testing.T) {
 	// Mock data
 	userSrvMock := new(UserServiceMock)
-	req := userSrvMock.initParams("krol", "nhu")
-	pathF1, _ := filepath.Abs("../mock_data/user/data_user.json")
+	reqMock := userSrvMock.initParams("krol", "nhu")
+	pathF1, _ := filepath.Abs("../mock_data/user/data.user.json")
 	userDataMock := util.ReadFile(pathF1)
 
 	var users []*models.UserResp
@@ -81,36 +75,39 @@ func TestSearchUser_Found_WithNameAndEmail(t *testing.T) {
 	util.ParseJSON(userDataMock, &user)
 	users = append(users, user)
 
-	userSrvMock.On("HandleSearch", req).Return(users, nil)
 	respExpected, _ := json.Marshal(resp.Success(users, http.StatusOK))
 
-	// Execute test Controller
-	r := SetUpRouter()
+	// Setup Route
+	r := gin.New()
 	r.GET("/v1/users", controllers.NewUserController(userSrvMock).Search)
-	reqTest, _ := http.NewRequest("GET", fmt.Sprintf("/v1/users?name=%s&email=%s", req.Name, req.Email), nil)
 	w := httptest.NewRecorder()
-	r.ServeHTTP(w, reqTest)
+	c, _ := gin.CreateTestContext(w)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/v1/users?name=%s&email=%s", reqMock.Name, reqMock.Email), nil)
+	c.Request = req
+	// mock data from services
+	userSrvMock.On("HandleSearch", c, reqMock).Return(users, nil)
+	r.HandleContext(c)
 
 	// Assert test result
-	respActual, _ := ioutil.ReadAll(w.Body)
-	assert.Equal(t, string(respExpected), string(respActual))
+	assert.Equal(t, string(respExpected), w.Body.String())
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
-func TestSearchUser_Empty_Params(t *testing.T) {
+func TestSearchUser_Null_WithEmptyParams(t *testing.T) {
 	// Mock data
 	userSrvMock := new(UserServiceMock)
-	req := userSrvMock.initParams("", "")
-
-	userSrvMock.On("HandleSearch", req).Return(nil, nil)
+	reqMock := userSrvMock.initParams("", "")
 	respExpected, _ := json.Marshal(resp.Success(nil, http.StatusOK))
 
-	// Execute test Controller
-	r := SetUpRouter()
+	// Setup Route and execute test
+	r := gin.New()
 	r.GET("/v1/users", controllers.NewUserController(userSrvMock).Search)
-	reqTest, _ := http.NewRequest("GET", fmt.Sprintf("/v1/users?name=%s&email=%s", req.Name, req.Email), nil)
 	w := httptest.NewRecorder()
-	r.ServeHTTP(w, reqTest)
+	c, _ := gin.CreateTestContext(w)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/v1/users?name=%s&email=%s", reqMock.Name, reqMock.Email), nil)
+	c.Request = req
+	userSrvMock.On("HandleSearch", c, reqMock).Return(nil, nil)
+	r.HandleContext(c)
 
 	// Assert test result
 	respActual, _ := ioutil.ReadAll(w.Body)
@@ -121,21 +118,23 @@ func TestSearchUser_Empty_Params(t *testing.T) {
 func TestSearchUser_Failed_InternalServerError(t *testing.T) {
 	// Mock data
 	userSrvMock := new(UserServiceMock)
-	req := userSrvMock.initParams("nhu", "kieu")
+	reqMock := userSrvMock.initParams("krol", "krol@gmail.com")
 
-	userSrvMock.On("HandleSearch", req).Return(nil, gorm.ErrInvalidDB)
 	respExpected, _ := json.Marshal(resp.InternalServerError())
 
-	// Execute test Controller
-	r := SetUpRouter()
+	// Setup Route and execute test
+	r := gin.New()
 	r.GET("/v1/users", controllers.NewUserController(userSrvMock).Search)
-	reqTest, _ := http.NewRequest("GET", fmt.Sprintf("/v1/users?name=%s&email=%s", req.Name, req.Email), nil)
 	w := httptest.NewRecorder()
-	r.ServeHTTP(w, reqTest)
+	c, _ := gin.CreateTestContext(w)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/v1/users?name=%s&email=%s", reqMock.Name, reqMock.Email), nil)
+	c.Request = req
+	// mock data from services
+	userSrvMock.On("HandleSearch", c, reqMock).Return(nil, gorm.ErrInvalidDB)
+	r.HandleContext(c)
 
 	// Assert test result
-	respActual, _ := ioutil.ReadAll(w.Body)
-	assert.Equal(t, string(respExpected), string(respActual))
+	assert.Equal(t, string(respExpected), w.Body.String())
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }
 
@@ -149,21 +148,23 @@ func TestCreateUser_Success(t *testing.T) {
 	var user *models.User
 	util.ParseJSON(userDataMock, &user)
 	util.ParseJSON(userDataMock, &userCreateReq)
+	body, _ := json.Marshal(userCreateReq)
 
-	userSrvMock.On("HandleCreate", *userCreateReq).Return(user, nil)
 	respExpected, _ := json.Marshal(resp.Success(user, http.StatusOK))
 
-	// Execute test Controller
-	r := SetUpRouter()
+	// Setup Route and execute test
+	r := gin.New()
 	r.POST("/v1/users", controllers.NewUserController(userSrvMock).Create)
-	payload, _ := json.Marshal(userCreateReq)
-	reqTest, _ := http.NewRequest("POST", "/v1/users", bytes.NewBuffer(payload))
 	w := httptest.NewRecorder()
-	r.ServeHTTP(w, reqTest)
+	c, _ := gin.CreateTestContext(w)
+	req, _ := http.NewRequest("POST", "/v1/users", bytes.NewBuffer(body))
+	c.Request = req
+	// mock data from services
+	userSrvMock.On("HandleCreate", c, *userCreateReq).Return(user, nil)
+	r.HandleContext(c)
 
 	// Assert test result
-	respActual, _ := ioutil.ReadAll(w.Body)
-	assert.Equal(t, string(respExpected), string(respActual))
+	assert.Equal(t, string(respExpected), w.Body.String())
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
@@ -176,25 +177,25 @@ func TestCreateUser_Failed_Validation_Params(t *testing.T) {
 		Address: "HCM city",
 		TeamID:  1,
 	}
-
-	userSrvMock.On("HandleCreate", userCreateReq).Return(nil, nil)
-
+	body, _ := json.Marshal(userCreateReq)
 	var errV []*errc.ValidationError
 	strErr := `[{"field":"name","reason":"required"},{"field":"email","reason":"email"},{"field":"phone","reason":"e164"}]`
 	util.ParseJSON([]byte(strErr), &errV)
 	respExpected, _ := json.Marshal(resp.BadRequest(errV))
 
-	// Execute test Controller
-	r := SetUpRouter()
+	// Setup Route and execute test
+	r := gin.New()
 	r.POST("/v1/users", controllers.NewUserController(userSrvMock).Create)
-	body, _ := json.Marshal(userCreateReq)
-	reqTest, _ := http.NewRequest("POST", "/v1/users", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
-	r.ServeHTTP(w, reqTest)
+	c, _ := gin.CreateTestContext(w)
+	req, _ := http.NewRequest("POST", "/v1/users", bytes.NewBuffer(body))
+	c.Request = req
+	// mock data from services
+	userSrvMock.On("HandleCreate", c, userCreateReq).Return(nil, nil)
+	r.HandleContext(c)
 
 	// Assert test result
-	respActual, _ := ioutil.ReadAll(w.Body)
-	assert.Equal(t, string(respExpected), string(respActual))
+	assert.Equal(t, string(respExpected), w.Body.String())
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
@@ -208,45 +209,50 @@ func TestCreateUser_Failed_Validation_Duplicate(t *testing.T) {
 		Phone:   "+8491747477",
 		TeamID:  1,
 	}
-
-	userSrvMock.On("HandleCreate", userCreateReq).Return(nil, gorm.ErrDuplicatedKey)
 	respExpected, _ := json.Marshal(resp.BadRequest(gorm.ErrDuplicatedKey.Error()))
-
-	// Execute test Controller
-	r := SetUpRouter()
-	r.POST("/v1/users", controllers.NewUserController(userSrvMock).Create)
 	body, _ := json.Marshal(userCreateReq)
-	reqTest, _ := http.NewRequest("POST", "/v1/users", bytes.NewBuffer(body))
+
+	// Setup Route and execute test
+	r := gin.New()
+	r.POST("/v1/users", controllers.NewUserController(userSrvMock).Create)
 	w := httptest.NewRecorder()
-	r.ServeHTTP(w, reqTest)
+	c, _ := gin.CreateTestContext(w)
+	req, _ := http.NewRequest("POST", "/v1/users", bytes.NewBuffer(body))
+	c.Request = req
+	// mock data from services
+	userSrvMock.On("HandleCreate", c, userCreateReq).Return(nil, gorm.ErrDuplicatedKey)
+	r.HandleContext(c)
 
 	// Assert test result
-	respActual, _ := ioutil.ReadAll(w.Body)
-	assert.Equal(t, string(respExpected), string(respActual))
+	assert.Equal(t, string(respExpected), w.Body.String())
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
 func TestCreateUser_Failed_InternalServerError(t *testing.T) {
 	// Mock data
 	userSrvMock := new(UserServiceMock)
-	pathF1, _ := filepath.Abs("../mock_data/user/data.user.req.json")
-	userReqMock := util.ReadFile(pathF1)
-
-	var userCreateReq *models.UserCreateReq
-	util.ParseJSON(userReqMock, &userCreateReq)
-
-	userSrvMock.On("HandleCreate", *userCreateReq).Return(nil, gorm.ErrInvalidDB)
+	userCreateReq := models.UserCreateReq{
+		Name:    "krol",
+		Email:   "krol@gmail.com",
+		Phone:   "+8491747477",
+		Address: "HCM city",
+		TeamID:  1,
+	}
 	respExpected, _ := json.Marshal(resp.InternalServerError())
+	body, _ := json.Marshal(userCreateReq)
 
 	// Execute test Controller
-	r := SetUpRouter()
+	r := gin.New()
 	r.POST("/v1/users", controllers.NewUserController(userSrvMock).Create)
-	reqTest, _ := http.NewRequest("POST", "/v1/users", bytes.NewBuffer(userReqMock))
 	w := httptest.NewRecorder()
-	r.ServeHTTP(w, reqTest)
+	c, _ := gin.CreateTestContext(w)
+	req, _ := http.NewRequest("POST", "/v1/users", bytes.NewBuffer(body))
+	c.Request = req
+	// mock data from services
+	userSrvMock.On("HandleCreate", c, userCreateReq).Return(nil, gorm.ErrInvalidDB)
+	r.HandleContext(c)
 
 	// Assert test result
-	respActual, _ := ioutil.ReadAll(w.Body)
-	assert.Equal(t, string(respExpected), string(respActual))
+	assert.Equal(t, string(respExpected), w.Body.String())
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }

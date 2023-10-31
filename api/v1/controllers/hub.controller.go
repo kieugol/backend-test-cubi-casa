@@ -30,7 +30,7 @@ func (ctrl HubController) Create(c *gin.Context) {
 		return
 	}
 
-	data, err := ctrl.srv.HandleCreate(req)
+	data, err := ctrl.srv.HandleCreate(c, req)
 	if err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
 			c.JSON(http.StatusBadRequest, resp.BadRequest(err.Error()))

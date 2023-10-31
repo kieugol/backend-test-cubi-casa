@@ -1,6 +1,7 @@
 package unit
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 	"time"
@@ -69,7 +70,7 @@ func TestSaveUser_Success(t *testing.T) {
 	// execute test
 	repo := repository.NewUserRepository(db)
 	srv := services.NewUserService(repo)
-	result, err := srv.HandleCreate(userReq)
+	result, err := srv.HandleCreate(context.TODO(), userReq)
 
 	// Assert test result
 	assert.Equal(t, nil, err)
@@ -98,7 +99,7 @@ func TestSaveUser_Failed_Duplicate(t *testing.T) {
 	// execute test
 	repo := repository.NewUserRepository(db)
 	srv := services.NewUserService(repo)
-	result, err := srv.HandleCreate(userReq)
+	result, err := srv.HandleCreate(context.TODO(), userReq)
 
 	// Assert test result
 	assert.Equal(t, gorm.ErrDuplicatedKey, err)
@@ -153,7 +154,7 @@ func TestFindUser_Found_WithNameAndEmail(t *testing.T) {
 	// execute test
 	repo := repository.NewUserRepository(db)
 	srv := services.NewUserService(repo)
-	result, err := srv.HandleSearch(userReq)
+	result, err := srv.HandleSearch(context.TODO(), userReq)
 
 	// Assert test result
 	assert.Equal(t, nil, err)
@@ -175,7 +176,7 @@ func TestFindUser_InternalServerError_(t *testing.T) {
 	// execute test
 	repo := repository.NewUserRepository(db)
 	srv := services.NewUserService(repo)
-	result, err := srv.HandleSearch(userReq)
+	result, err := srv.HandleSearch(context.TODO(), userReq)
 
 	// Assert test result
 	assert.Equal(t, gorm.ErrUnsupportedRelation, err)

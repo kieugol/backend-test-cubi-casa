@@ -1,6 +1,7 @@
 package unit
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 	"time"
@@ -62,7 +63,7 @@ func TestSaveTeam_Success(t *testing.T) {
 	// execute test
 	repo := repository.NewTeamRepository(db)
 	srv := services.NewTeamService(repo)
-	result, err := srv.HandleCreate(teamReq)
+	result, err := srv.HandleCreate(context.TODO(), teamReq)
 	// Assert test result
 	assert.Equal(t, nil, err)
 	assert.Equal(t, dataExpected, *result)
@@ -87,7 +88,7 @@ func TestSaveTeam_Failed_ForeignKey_NotFound(t *testing.T) {
 	// execute test
 	repo := repository.NewTeamRepository(db)
 	srv := services.NewTeamService(repo)
-	result, err := srv.HandleCreate(teamReq)
+	result, err := srv.HandleCreate(context.TODO(), teamReq)
 
 	// Assert test result
 	assert.Equal(t, gorm.ErrForeignKeyViolated, err)
@@ -129,7 +130,7 @@ func TestSearchTeam_Found_WithNameAndID(t *testing.T) {
 	// execute test
 	repo := repository.NewTeamRepository(db)
 	srv := services.NewTeamService(repo)
-	result, err := srv.HandleSearch(teamReq)
+	result, err := srv.HandleSearch(context.TODO(), teamReq)
 
 	// Assert test result
 	assert.Equal(t, nil, err)
@@ -151,7 +152,7 @@ func TestSearchUser_InternalServerError(t *testing.T) {
 	// execute test
 	repo := repository.NewTeamRepository(db)
 	srv := services.NewTeamService(repo)
-	result, err := srv.HandleSearch(teamReq)
+	result, err := srv.HandleSearch(context.TODO(), teamReq)
 
 	// Assert test result
 	assert.Equal(t, gorm.ErrUnsupportedRelation, err)

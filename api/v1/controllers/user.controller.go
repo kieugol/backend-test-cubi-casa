@@ -31,7 +31,7 @@ func (ctrl UserController) Create(c *gin.Context) {
 		return
 	}
 
-	data, err := ctrl.srv.HandleCreate(req)
+	data, err := ctrl.srv.HandleCreate(c, req)
 	if err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) ||
 			errors.Is(err, gorm.ErrForeignKeyViolated) {
@@ -48,16 +48,16 @@ func (ctrl UserController) Create(c *gin.Context) {
 func (ctrl UserController) Search(c *gin.Context) {
 	var req models.UserSearchReq
 	_ = c.ShouldBindQuery(&req)
-
 	if util.IsEmptyStruct(req, models.UserSearchReq{}) {
 		c.JSON(http.StatusOK, resp.Success(nil, http.StatusOK))
 		return
 	}
-	data, err := ctrl.srv.HandleSearch(req)
+	data, err := ctrl.srv.HandleSearch(c, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, resp.InternalServerError())
 		return
 	}
 
 	c.JSON(http.StatusOK, resp.Success(data, http.StatusOK))
+	return
 }

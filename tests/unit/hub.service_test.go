@@ -1,6 +1,7 @@
 package unit
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 	"time"
@@ -63,7 +64,7 @@ func TestSaveHub_Success(t *testing.T) {
 	// execute test
 	repo := repository.NewHubRepository(db)
 	srv := services.NewHubService(repo)
-	result, err := srv.HandleCreate(hubReq)
+	result, err := srv.HandleCreate(context.TODO(), hubReq)
 
 	// Assert test result
 	assert.Equal(t, nil, err)
@@ -89,7 +90,7 @@ func TestSaveHub_Failed_Duplicate(t *testing.T) {
 	// execute test
 	repo := repository.NewHubRepository(db)
 	srv := services.NewHubService(repo)
-	result, err := srv.HandleCreate(hubReq)
+	result, err := srv.HandleCreate(context.TODO(), hubReq)
 
 	// Assert test result
 	assert.Equal(t, gorm.ErrDuplicatedKey, err)

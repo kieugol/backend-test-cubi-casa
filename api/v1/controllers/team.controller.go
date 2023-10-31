@@ -31,7 +31,7 @@ func (ctrl TeamController) Create(c *gin.Context) {
 		return
 	}
 
-	data, err := ctrl.srv.HandleCreate(req)
+	data, err := ctrl.srv.HandleCreate(c, req)
 	if err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) ||
 			errors.Is(err, gorm.ErrForeignKeyViolated) {
@@ -54,7 +54,7 @@ func (ctrl TeamController) Search(c *gin.Context) {
 		return
 	}
 
-	data, err := ctrl.srv.HandleSearch(req)
+	data, err := ctrl.srv.HandleSearch(c, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, resp.InternalServerError())
 		return

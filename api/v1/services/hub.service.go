@@ -9,7 +9,7 @@ import (
 )
 
 type IHubService interface {
-	HandleCreate(req models.HubCreateReq) (*models.Hub, error)
+	HandleCreate(ctx context.Context, req models.HubCreateReq) (*models.Hub, error)
 }
 
 type HubService struct {
@@ -22,7 +22,7 @@ func NewHubService(repo repository.IHubRepository) *HubService {
 	}
 }
 
-func (srv *HubService) HandleCreate(req models.HubCreateReq) (*models.Hub, error) {
+func (srv *HubService) HandleCreate(ctx context.Context, req models.HubCreateReq) (*models.Hub, error) {
 	now := time.Now()
 	user := &models.Hub{
 		Name:        req.Name,
@@ -32,7 +32,7 @@ func (srv *HubService) HandleCreate(req models.HubCreateReq) (*models.Hub, error
 		UpdatedAt:   now,
 	}
 
-	if err := srv.repo.Create(context.TODO(), user); err != nil {
+	if err := srv.repo.Create(ctx, user); err != nil {
 		return nil, err
 	}
 
